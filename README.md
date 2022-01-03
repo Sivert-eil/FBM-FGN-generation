@@ -16,6 +16,6 @@ time_series_fGN = FGN(N = 10000, hurst = 0.7, method='davies-harte')
 ```
 
 ## Possible future work
- - [] Implement more method
- - [] Clean up the code
- - [] Finish up the documentation for the code
+ - [ ] Implement more method
+ - [ ] Clean up the code
+ - [ ] Finish up the documentation for the code
