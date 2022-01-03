@@ -2,7 +2,10 @@
 This is an implementation to generate fractional Gaussian noise (FGN), and by extension calculating the cumulative sum of the FGN gives fractional Brownian motion (FBM).
 
 ## Methods
-Implemented methods to generate the FGN is for the moment only the Davies-Harte method
+Implemented methods to generate the FGN is for the moment only the Davies-Harte method reached by setting the *method* argument
+```python
+method = 'davies-harte'
+```
 
 ## Usage
 The syntax for generating the FGN/FBM time series is
