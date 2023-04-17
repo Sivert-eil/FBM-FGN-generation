@@ -1,20 +1,16 @@
 '''
-This will be a classless implementation to simulate fractional Brownian motion
-using more familiar methods of generating the noise series and then a more
-experimental version of the same to extend the reach of the Hurst exponent
-
-- Sivert Eilertsen
-'''
-
-'''
 The most common method is the Davies-Harte algorithm described in Tests for
 Hurst effect, and more recently improved by Wood and Chan
 
 This implementation will follow that of Wood and Chan with the same nomentcalture
+
+The Hosking method is also implemented, following the paper by J. R. M Hosking
 '''
 
 import numpy as np
 import math
+from numba import njit
+
 
 
 def FBM(N: int, hurst: float, method: str):
@@ -34,13 +30,13 @@ def FBM(N: int, hurst: float, method: str):
 
     Returns
     -------
-    fbm : array
-        FBM, Cumulative sum of the FGN simulation.
+    FBM : array
+        Cumulative sum of the FGN simulation, a fractional Brownian 
+        motion time series
     '''
 
     fgn = FGN(N, hurst, method)
-    fbm = np.cumsum(fgn)
-    return fbm
+    return np.cumsum(fgn)
 
 
 def FGN(N: int, hurst: float, method: str):
@@ -66,10 +62,10 @@ def FGN(N: int, hurst: float, method: str):
     -------
     fgn : array
         The fractional Gaussian noise time series
-    '''
 
+    '''
     assert 0 < hurst < 1, 'Hurst exponent has to be in the range (0, 1)'
-    assert method in ['davies-harte'], 'Unsupported method. Use "davies-harte"'
+    assert method in ['davies-harte', 'hosking'], 'Unsupported method. Use "davies-harte" or "hosking"'
     if hurst == 0.5:
         #For Hurst exponent == 0.5 the process is just a normal white noise
         fgn = np.random.normal(0, 1, size = N)
@@ -79,7 +75,11 @@ def FGN(N: int, hurst: float, method: str):
         if method  == 'davies-harte':
             fgn = fgn_DH(N, hurst)
             return fgn
+        if method == 'hosking':
+            fgn = fgn_hosking(N, hurst)
+            return fgn
 
+@njit(cache=True)
 def Autocov_func(k: int, hurst: float):
     '''
     The Autocovariance function which defines the fractional Gaussian noise
@@ -97,7 +97,7 @@ def Autocov_func(k: int, hurst: float):
     ACF : float
         Auto-correlation at given lag and Hurst exponent
     '''
-    return 0.5*abs(k + 1)**(2*hurst) + 0.5*abs(k - 1)**(2*hurst) - abs(k)**(2*hurst)
+    return 0.5*np.abs(k + 1)**(2*hurst) + 0.5*np.abs(k - 1)**(2*hurst) - np.abs(k)**(2*hurst)
 
 
 def fgn_DH(N: int, hurst: float):
@@ -115,13 +115,13 @@ def fgn_DH(N: int, hurst: float):
     Raises
     ------
     ValueError
-        Raised when negative eigenvalues are encountered in Fourier transform
-        of the circulant matrix.
+        Raised when negative eigenvalues of the circulant matrix are encountered 
 
     Returns
     -------
     fgn : array
         Scaled fractional Gaussian noise time series.
+
     '''
 
     g = math.ceil(np.log2(2*N))
@@ -141,6 +141,10 @@ def fgn_DH(N: int, hurst: float):
 
     except ValueError:
         print('Error: Encountered negative eigenvalue again. Switching to an approximate solution...')
+        
+        # NOTE: You can increase the number "g" to find a time series length which does not
+        # give you negative eigenvalues, this has, however, not been necessary thus far. 
+  
 
         # Removing the elements corresponding to the negative eigenvalues in the circulant matrix
         index = [n for n in range(len(eigenvalues)) if eigenvalues[n] < 0]
@@ -148,7 +152,7 @@ def fgn_DH(N: int, hurst: float):
         c1 = np.sum(eigenvalues) # summing over all eigenvalues
         for idx in index:
             eigenvalues[idx] = 0.0
-        c2 = np.sum(eigenvalues) # summing over all POSITIVE eigenvalues
+        c2 = np.sum(eigenvalues) # summing over all positive eigenvalues
 
         # Setting all row elements corresponding to a negiative eigenvalue to zero
         for idx in index:
@@ -159,7 +163,7 @@ def fgn_DH(N: int, hurst: float):
         eigenvalues = np.fft.fft(row)
 
 
-    #Generating two independend standard normal random variables for use later
+    #Generating two independent standard normal random variables for use later
     U = np.random.normal(0, 1, int(m))
     V = np.random.normal(0, 1, int(m))
 
@@ -172,12 +176,69 @@ def fgn_DH(N: int, hurst: float):
     x = np.fft.fft(a)
     fgn = x[:N].real
 
-    scale = (1.0/N) ** hurst
+    scale = 1 #(1.0/N) ** hurst
     # This is to scale the normal random variables to fit with the stepsize
     # of the time increments of the simulation. These should be
     # sqrt(delta(t)) * N(0,1) for a standard brownian motion
-    # it is the stepaize to the power of the hurst exponent
+    # it is the stepsize to the power of the hurst exponent
+    return fgn * scale
 
+@njit(cache=True)
+def fgn_hosking(N: int, hurst: float):
+    '''
+    Implementation of the Hosking method to generate a fractional Gaussian
+    noise time series
+
+    Parameters
+    ----------
+    N : int
+        Length of the simulation.
+    hurst : float
+        Hurst exponent used when generating the FGN time series.
+
+
+    Returns
+    -------
+    fgn : array
+        Scaled fractional Gaussian noise time series.
+
+    '''
+    
+
+    # Allocate resulting time series
+    fgn = np.zeros(N)
+    # partial correlation coefficients
+    phi_ii = np.zeros(N)
+    # partial linear regression coefficients
+    phi_ij = np.zeros(N)
+
+    # Generate standard normal distribution
+    normal = np.random.normal(0, 1, N)
+
+    # Initial values
+    fgn[0] = normal[0]
+    V = 1
+    phi_ii[0] = 0
+
+    for i in range(1, N):
+        phi_ii[i - 1] = Autocov_func(i, hurst)
+
+        for j in range(i - 1):
+            phi_ij[j] = phi_ii[j]
+            phi_ii[i - 1] -= phi_ij[j] * Autocov_func(i - j - 1, hurst)
+
+        phi_ii[i - 1] /= V
+
+        for j in range(i - 1):
+            phi_ii[j] = phi_ij[j] - phi_ii[i - 1]*phi_ij[i - j - 2]
+        V *= 1 - phi_ii[i - 1]**2
+
+        for j in range(i):
+            fgn[i] += phi_ii[j] * fgn[i - j - 1]
+
+        fgn[i] += np.sqrt(V) * normal[i]
+
+    scale = (1.0/N) ** hurst
     return fgn * scale
 
 # End of File
