@@ -56,6 +56,6 @@ Even though the *hosking* method is slow, that method will not fail. The *davies
 
 
 ## References
-[^1]:   R. B. Daveis, D. S. Harte. *Tests for Hurst effect*, (1987). https://doi.org/10.2307/2336024 
+[^1]:   R. B. Davies, D. S. Harte. *Tests for Hurst effect*, (1987). https://doi.org/10.2307/2336024
 [^2]:   A. T. A. Wood, G. Chan. *Simulation of Stationary Gaussian Processes in [0,1]^d*, (1994). https://doi.org/10.2307/1390903
 [^3]:   J. R. M. Hosking. *Modeling persistence in hydrological time series using fractional differencing*, (1984).  https://doi.org/10.1029/WR020i012p01898
