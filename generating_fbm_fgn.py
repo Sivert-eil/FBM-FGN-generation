@@ -31,7 +31,7 @@ def FBM(N: int, hurst: float, method: str):
     Returns
     -------
     FBM : array
-        Cumulative sum of the FGN simulation, a fractional Brownian 
+        Cumulative sum of the FGN simulation, a fractional Brownian
         motion time series
     '''
 
@@ -115,7 +115,7 @@ def fgn_DH(N: int, hurst: float):
     Raises
     ------
     ValueError
-        Raised when negative eigenvalues of the circulant matrix are encountered 
+        Raised when negative eigenvalues of the circulant matrix are encountered
 
     Returns
     -------
@@ -124,7 +124,7 @@ def fgn_DH(N: int, hurst: float):
 
     '''
 
-    g = math.ceil(np.log2(2*N))
+    g = math.ceil(np.log2(2*N - 2))
     m = int(2**g)
 
     # generate row in circulant matrix C
@@ -141,10 +141,10 @@ def fgn_DH(N: int, hurst: float):
 
     except ValueError:
         print('Error: Encountered negative eigenvalue again. Switching to an approximate solution...')
-        
+
         # NOTE: You can increase the number "g" to find a time series length which does not
-        # give you negative eigenvalues, this has, however, not been necessary thus far. 
-  
+        # give you negative eigenvalues, this has, however, not been necessary thus far.
+
 
         # Removing the elements corresponding to the negative eigenvalues in the circulant matrix
         index = [n for n in range(len(eigenvalues)) if eigenvalues[n] < 0]
@@ -203,7 +203,7 @@ def fgn_hosking(N: int, hurst: float):
         Scaled fractional Gaussian noise time series.
 
     '''
-    
+
 
     # Allocate resulting time series
     fgn = np.zeros(N)
