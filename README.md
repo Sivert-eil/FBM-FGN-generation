@@ -11,10 +11,10 @@ Where $\mathcal{H}$ is the hurst exponent and we notice for $\mathcal{H}=1/2$ we
 The methods implemented to generate the fractional Gaussian noise is the *Davies-Harte* method and the *Hosking* method.
 
 ### The Davies-Harte method
-The Davies-Harte method was first outlined in the paper *Tests for hurst effekt* by R. B. Davies and D. S. Harte [1]. The method was later improved by A. T. A. Wood and G. Chan [2]. This algorithm outlined in this paper is implemented here. The method is based on creating a longer vector than in the original method from a circulant covariance matrix and then selecting the subset of that vector as output. It can be shown that the eigenvalues of a circulant matrix are the Fourier modes.
+The Davies-Harte method was first outlined in the paper *Tests for hurst effekt* by R. B. Davies and D. S. Harte [^1]. The method was later improved by A. T. A. Wood and G. Chan [^2]. This algorithm outlined in this paper is implemented here. The method is based on creating a longer vector than in the original method from a circulant covariance matrix and then selecting the subset of that vector as output. It can be shown that the eigenvalues of a circulant matrix are the Fourier modes.
 
 ### The Hosking method
-This method is recursive that generates a stationary time series with a gaussian marginal distribution and with the given correlational structure $\rho(k)$ [3].
+This method is recursive that generates a stationary time series with a gaussian marginal distribution and with the given correlational structure $\rho(k)$ [^3].
 
 
 Implemented methods to generate the FGN is for the moment the Davies-Harte method and the hosking method reached by setting the *method* argument
@@ -56,6 +56,6 @@ Even though the *hosking* method is slow, that method will not fail. The *davies
 
 
 ## References
-[1]   R. B. Daveis, D. S. Harte. *Tests for Hurst effect*, (1987). https://doi.org/10.2307/2336024 \n
-[2]   A. T. A. Wood, G. Chan. *Simulation of Stationary Gaussian Processes in [0,1]^d*, (1994). https://doi.org/10.2307/1390903 \n
-[3]   J. R. M. Hosking. *Modeling persistence in hydrological time series using fractional differencing*, (1984).  https://doi.org/10.1029/WR020i012p01898
+[^1]:   R. B. Daveis, D. S. Harte. *Tests for Hurst effect*, (1987). https://doi.org/10.2307/2336024 
+[^2]:   A. T. A. Wood, G. Chan. *Simulation of Stationary Gaussian Processes in [0,1]^d*, (1994). https://doi.org/10.2307/1390903
+[^3]:   J. R. M. Hosking. *Modeling persistence in hydrological time series using fractional differencing*, (1984).  https://doi.org/10.1029/WR020i012p01898
